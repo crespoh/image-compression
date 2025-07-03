@@ -4,8 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Image Compressor - Optimize Images for Any Platform</title>
+    <title>Image Compressor Pro - Optimize Images for Any Platform</title>
     <meta name="description" content="Compress JPG and PNG images client-side with presets for Etsy, Shopee, LinkedIn and more. No upload required - everything happens in your browser.">
+    
+    <!-- Plausible Analytics -->
+    <script defer data-domain="your-domain.com" src="https://plausible.io/js/script.js"></script>
+    
+    <!-- Sentry Error Tracking -->
+    <script
+      src="https://browser.sentry-cdn.com/7.99.0/bundle.tracing.min.js"
+      integrity="sha384-8Jhi9/2B8XUqmm8DJKvjCh0tQZFvdtF0jE9D1q8K8K8K8K8K8K8K8K8K8K8K8K8K"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      if (typeof Sentry !== 'undefined') {
+        Sentry.init({
+          dsn: "YOUR_SENTRY_DSN_HERE", // Replace with your actual Sentry DSN
+          integrations: [
+            new Sentry.BrowserTracing(),
+          ],
+          tracesSampleRate: 1.0,
+          environment: "production"
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

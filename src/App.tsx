@@ -352,7 +352,7 @@ function App() {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Easy Image Compression</h1>
+                <h1 className="text-2xl font-bold text-white">Easy Image Compress</h1>
                 <p className="text-blue-100">Optimize your images for any platform</p>
               </div>
             </div>

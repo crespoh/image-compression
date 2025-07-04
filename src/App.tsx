@@ -1,5 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Image as ImageIcon, AlertCircle, FileImage, Zap, Moon, Sun, RotateCcw, Shield, Mail, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Zap, Moon, Sun, RotateCcw, Shield, Mail, Heart } from 'lucide-react';
+import ImageUploader from './components/ImageUploader';
+import CompressionControls from './components/CompressionControls';
+import ImagePreview from './components/ImagePreview';
 
 interface ImageData {
   file: File;
@@ -66,7 +69,6 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [previewMode, setPreviewMode] = useState<'side-by-side' | 'toggle'>('side-by-side');
   const [showOriginal, setShowOriginal] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -92,20 +94,12 @@ function App() {
     trackEvent('Dark Mode Toggle', { enabled: newDarkMode });
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const validateFile = (file: File): string | null => {
     if (!file.type.match(/^image\/(jpeg|jpg|png)$/i)) {
-      return 'Please upload only JPG or PNG images.';
+      return 'Please upload only JPG or PNG images. Other formats are not supported.';
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `File size must be less than ${formatFileSize(MAX_FILE_SIZE)}.`;
+      return `File size must be less than 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`;
     }
     return null;
   };
@@ -114,7 +108,7 @@ function App() {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onerror = () => reject(new Error('Failed to load image. The file may be corrupted.'));
       img.src = URL.createObjectURL(file);
     });
   };
@@ -191,7 +185,7 @@ function App() {
       const img = await loadImage(file);
       
       if (img.width > MAX_DIMENSIONS || img.height > MAX_DIMENSIONS) {
-        const errorMsg = `Image dimensions must be less than ${MAX_DIMENSIONS}×${MAX_DIMENSIONS} pixels.`;
+        const errorMsg = `Image dimensions must be less than ${MAX_DIMENSIONS}×${MAX_DIMENSIONS} pixels. Your image is ${img.width}×${img.height}px.`;
         setError(errorMsg);
         logError(new Error(errorMsg), 'Image Dimensions');
         return;
@@ -230,36 +224,10 @@ function App() {
         compressionRatio: Math.round(((file.size - compressed.size) / file.size) * 100)
       });
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      setError('Failed to process image. Please try again.');
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      setError('Failed to process image. Please try again with a different file.');
       logError(error, 'Image Processing');
       setIsProcessing(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
     }
   };
 
@@ -274,8 +242,8 @@ function App() {
         const compressed = await compressImage(img, preset, quality);
         setCompressedImage(compressed);
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        setError('Failed to reprocess image.');
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
+        setError('Failed to reprocess image with new preset.');
         logError(error, 'Preset Change');
       }
       setIsProcessing(false);
@@ -297,8 +265,8 @@ function App() {
           preset: selectedPreset 
         });
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        setError('Failed to reprocess image.');
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
+        setError('Failed to reprocess image with new quality setting.');
         logError(error, 'Quality Change');
       }
       setIsProcessing(false);
@@ -306,10 +274,10 @@ function App() {
   };
 
   const downloadImage = () => {
-    if (compressedImage) {
+    if (compressedImage && originalImage) {
       const link = document.createElement('a');
       link.href = URL.createObjectURL(compressedImage.blob);
-      link.download = `compressed_${originalImage?.file.name || 'image.jpg'}`;
+      link.download = `compressed_${originalImage.file.name}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -317,7 +285,7 @@ function App() {
       trackEvent('Image Downloaded', {
         preset: selectedPreset,
         quality,
-        originalSize: originalImage?.size,
+        originalSize: originalImage.size,
         compressedSize: compressedImage.size
       });
     }
@@ -327,9 +295,7 @@ function App() {
     setOriginalImage(null);
     setCompressedImage(null);
     setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    setIsProcessing(false);
     trackEvent('App Reset');
   };
 
@@ -348,7 +314,7 @@ function App() {
     }`}>
       {/* Main Application */}
       <div className="flex items-center justify-center p-4 min-h-screen">
-        <div className={`w-full max-w-4xl rounded-2xl shadow-xl border overflow-hidden transition-colors duration-300 ${
+        <div className={`w-full max-w-5xl rounded-2xl shadow-xl border overflow-hidden transition-colors duration-300 ${
           darkMode 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-slate-200'
@@ -362,13 +328,14 @@ function App() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">Easy Image Compress</h1>
-                  <p className="text-blue-100">Optimize your images for any platform</p>
+                  <p className="text-blue-100">Professional image optimization for any platform</p>
                 </div>
               </div>
               <button
                 onClick={toggleDarkMode}
-                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
                 title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {darkMode ? (
                   <Sun className="w-5 h-5 text-white" />
@@ -382,346 +349,53 @@ function App() {
           <div className="p-8">
             {/* Upload Area */}
             {!originalImage && (
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-                  dragActive
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : darkMode
-                    ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50'
-                    : 'border-slate-300 hover:border-slate-400'
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDrag}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <div className={`p-4 rounded-full ${
-                    darkMode ? 'bg-gray-700' : 'bg-slate-100'
-                  }`}>
-                    <Upload className={`w-8 h-8 ${
-                      darkMode ? 'text-gray-300' : 'text-slate-600'
-                    }`} />
-                  </div>
-                  <div>
-                    <p className={`text-lg font-semibold mb-2 ${
-                      darkMode ? 'text-gray-200' : 'text-slate-700'
-                    }`}>
-                      Drop your image here
-                    </p>
-                    <p className={`mb-4 ${
-                      darkMode ? 'text-gray-400' : 'text-slate-500'
-                    }`}>
-                      or click to browse (JPG, PNG • Max 10MB • Max 8000×8000px)
-                    </p>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Choose File
-                    </button>
-                  </div>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  onChange={handleFileInput}
-                  className="hidden"
-                />
-              </div>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl mb-6">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                <p className="text-red-700 dark:text-red-300">{error}</p>
-              </div>
+              <ImageUploader
+                onFileSelect={handleFile}
+                dragActive={dragActive}
+                onDragStateChange={setDragActive}
+                error={error}
+                darkMode={darkMode}
+              />
             )}
 
             {/* Image Processing */}
             {originalImage && (
-              <div className="space-y-6">
-                {/* Controls - Reordered: Preset first, then Quality */}
-                <div className="space-y-6">
-                  {/* Preset Selection */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-3 ${
-                      darkMode ? 'text-gray-200' : 'text-slate-700'
-                    }`}>
-                      Choose Platform Preset
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(PRESETS).map(([key, preset]) => (
-                        <button
-                          key={key}
-                          onClick={() => handlePresetChange(key as Preset)}
-                          className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                            selectedPreset === key
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                              : darkMode
-                              ? 'border-gray-600 hover:border-gray-500 text-gray-300 bg-gray-700/50'
-                              : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                          }`}
-                        >
-                          {preset.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="space-y-8">
+                {/* Controls */}
+                <CompressionControls
+                  selectedPreset={selectedPreset}
+                  onPresetChange={handlePresetChange}
+                  quality={quality}
+                  onQualityChange={handleQualityChange}
+                  darkMode={darkMode}
+                  isProcessing={isProcessing}
+                />
 
-                  {/* Quality Slider */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-3 ${
-                      darkMode ? 'text-gray-200' : 'text-slate-700'
-                    }`}>
-                      Quality: {quality}%
-                    </label>
-                    <input
-                      type="range"
-                      min="50"
-                      max="90"
-                      value={quality}
-                      onChange={(e) => handleQualityChange(parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <span>50%</span>
-                      <span>90%</span>
-                    </div>
-                  </div>
-                </div>
+                {/* Image Preview */}
+                <ImagePreview
+                  originalImage={originalImage}
+                  compressedImage={compressedImage}
+                  isProcessing={isProcessing}
+                  previewMode={previewMode}
+                  showOriginal={showOriginal}
+                  onPreviewModeChange={setPreviewMode}
+                  onToggleView={() => setShowOriginal(!showOriginal)}
+                  onDownload={downloadImage}
+                  darkMode={darkMode}
+                />
 
-                {/* Preview Mode Toggle */}
-                <div className="flex items-center gap-4">
-                  <span className={`text-sm font-medium ${
-                    darkMode ? 'text-gray-200' : 'text-slate-700'
-                  }`}>
-                    Preview Mode:
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPreviewMode('side-by-side')}
-                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                        previewMode === 'side-by-side'
-                          ? 'bg-blue-600 text-white'
-                          : darkMode
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Side by Side
-                    </button>
-                    <button
-                      onClick={() => setPreviewMode('toggle')}
-                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                        previewMode === 'toggle'
-                          ? 'bg-blue-600 text-white'
-                          : darkMode
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Toggle
-                    </button>
-                  </div>
-                </div>
-
-                {/* Image Comparison */}
-                {previewMode === 'side-by-side' ? (
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Original */}
-                    <div className="space-y-3">
-                      <h3 className={`font-semibold flex items-center gap-2 ${
-                        darkMode ? 'text-gray-200' : 'text-slate-700'
-                      }`}>
-                        <FileImage className="w-4 h-4" />
-                        Original
-                      </h3>
-                      <div className={`rounded-lg p-4 ${
-                        darkMode ? 'bg-gray-700/50' : 'bg-slate-50'
-                      }`}>
-                        <img
-                          src={originalImage.dataUrl}
-                          alt="Original"
-                          className="w-full h-48 object-contain rounded-lg bg-white dark:bg-gray-800"
-                        />
-                        <div className={`mt-3 space-y-1 text-sm ${
-                          darkMode ? 'text-gray-300' : 'text-slate-600'
-                        }`}>
-                          <p className="break-words">
-                            <span className="font-medium">File:</span> {originalImage.file.name}
-                          </p>
-                          <p>
-                            <span className="font-medium">Size:</span> {formatFileSize(originalImage.size)}
-                          </p>
-                          <p>
-                            <span className="font-medium">Dimensions:</span> {originalImage.width} × {originalImage.height}px
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Compressed */}
-                    <div className="space-y-3">
-                      <h3 className={`font-semibold flex items-center gap-2 ${
-                        darkMode ? 'text-gray-200' : 'text-slate-700'
-                      }`}>
-                        <ImageIcon className="w-4 h-4" />
-                        Compressed
-                      </h3>
-                      <div className={`rounded-lg p-4 ${
-                        darkMode ? 'bg-gray-700/50' : 'bg-slate-50'
-                      }`}>
-                        {isProcessing ? (
-                          <div className={`w-full h-48 rounded-lg flex items-center justify-center ${
-                            darkMode ? 'bg-gray-800' : 'bg-slate-200'
-                          }`}>
-                            <div className="flex flex-col items-center gap-3">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                              <p className={`text-sm ${
-                                darkMode ? 'text-gray-300' : 'text-slate-600'
-                              }`}>
-                                Compressing...
-                              </p>
-                            </div>
-                          </div>
-                        ) : compressedImage ? (
-                          <img
-                            src={compressedImage.dataUrl}
-                            alt="Compressed"
-                            className="w-full h-48 object-contain rounded-lg bg-white dark:bg-gray-800"
-                          />
-                        ) : null}
-                        
-                        {compressedImage && (
-                          <div className={`mt-3 space-y-1 text-sm ${
-                            darkMode ? 'text-gray-300' : 'text-slate-600'
-                          }`}>
-                            <p className="break-words">
-                              <span className="font-medium">File:</span> compressed_{originalImage.file.name}
-                            </p>
-                            <p>
-                              <span className="font-medium">Size:</span> {formatFileSize(compressedImage.size)}
-                            </p>
-                            <p>
-                              <span className="font-medium">Dimensions:</span> {compressedImage.width} × {compressedImage.height}px
-                            </p>
-                            <p className="text-green-600 dark:text-green-400 font-medium">
-                              Reduced by {Math.round(((originalImage.size - compressedImage.size) / originalImage.size) * 100)}%
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* Toggle Mode */
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className={`font-semibold flex items-center gap-2 ${
-                        darkMode ? 'text-gray-200' : 'text-slate-700'
-                      }`}>
-                        <ImageIcon className="w-4 h-4" />
-                        {showOriginal ? 'Original' : 'Compressed'}
-                      </h3>
-                      <button
-                        onClick={() => setShowOriginal(!showOriginal)}
-                        className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                        Toggle View
-                      </button>
-                    </div>
-                    <div className={`rounded-lg p-4 ${
-                      darkMode ? 'bg-gray-700/50' : 'bg-slate-50'
-                    }`}>
-                      {showOriginal ? (
-                        <>
-                          <img
-                            src={originalImage.dataUrl}
-                            alt="Original"
-                            className="w-full h-64 object-contain rounded-lg bg-white dark:bg-gray-800"
-                          />
-                          <div className={`mt-3 space-y-1 text-sm ${
-                            darkMode ? 'text-gray-300' : 'text-slate-600'
-                          }`}>
-                            <p className="break-words">
-                              <span className="font-medium">File:</span> {originalImage.file.name}
-                            </p>
-                            <p>
-                              <span className="font-medium">Size:</span> {formatFileSize(originalImage.size)}
-                            </p>
-                            <p>
-                              <span className="font-medium">Dimensions:</span> {originalImage.width} × {originalImage.height}px
-                            </p>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {isProcessing ? (
-                            <div className={`w-full h-64 rounded-lg flex items-center justify-center ${
-                              darkMode ? 'bg-gray-800' : 'bg-slate-200'
-                            }`}>
-                              <div className="flex flex-col items-center gap-3">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                <p className={`text-sm ${
-                                  darkMode ? 'text-gray-300' : 'text-slate-600'
-                                }`}>
-                                  Compressing...
-                                </p>
-                              </div>
-                            </div>
-                          ) : compressedImage ? (
-                            <>
-                              <img
-                                src={compressedImage.dataUrl}
-                                alt="Compressed"
-                                className="w-full h-64 object-contain rounded-lg bg-white dark:bg-gray-800"
-                              />
-                              <div className={`mt-3 space-y-1 text-sm ${
-                                darkMode ? 'text-gray-300' : 'text-slate-600'
-                              }`}>
-                                <p className="break-words">
-                                  <span className="font-medium">File:</span> compressed_{originalImage.file.name}
-                                </p>
-                                <p>
-                                  <span className="font-medium">Size:</span> {formatFileSize(compressedImage.size)}
-                                </p>
-                                <p>
-                                  <span className="font-medium">Dimensions:</span> {compressedImage.width} × {compressedImage.height}px
-                                </p>
-                                <p className="text-green-600 dark:text-green-400 font-medium">
-                                  Reduced by {Math.round(((originalImage.size - compressedImage.size) / originalImage.size) * 100)}%
-                                </p>
-                              </div>
-                            </>
-                          ) : null}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={downloadImage}
-                    disabled={!compressedImage || isProcessing}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-slate-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-medium"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download Compressed
-                  </button>
+                {/* Reset Button */}
+                <div className="flex justify-center pt-4">
                   <button
                     onClick={resetApp}
-                    className={`px-6 py-3 border rounded-lg transition-colors font-medium ${
+                    className={`flex items-center gap-2 px-6 py-3 border rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                       darkMode
-                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                        : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                        : 'border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
                     }`}
+                    aria-label="Upload a new image"
                   >
+                    <RotateCcw className="w-4 h-4" />
                     Upload New Image
                   </button>
                 </div>
@@ -927,7 +601,7 @@ function App() {
                     </h3>
                     <div className="space-y-3">
                       <a 
-                        href="mailto:contact@shopcompress.com"
+                        href="mailto:info@codedcheese.com"
                         className="flex items-center gap-3 text-blue-600 hover:text-blue-700 transition-colors"
                       >
                         <Mail className="w-5 h-5" />
@@ -957,7 +631,7 @@ function App() {
                       Need a specific platform preset or feature? Let us know and we'll consider adding it to our roadmap.
                     </p>
                     <a 
-                      href="mailto:features@shopcompress.com"
+                      href="mailto:features@codedcheese.com"
                       className="text-blue-600 hover:text-blue-700 transition-colors text-sm"
                     >
                       features@codedcheese.com
@@ -1007,7 +681,7 @@ function App() {
               <nav className="space-y-2">
                 <button
                   onClick={() => scrollToSection('about')}
-                  className={`block text-sm hover:text-blue-600 transition-colors ${
+                  className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
                     darkMode ? 'text-gray-400' : 'text-slate-600'
                   }`}
                 >
@@ -1015,7 +689,7 @@ function App() {
                 </button>
                 <button
                   onClick={() => scrollToSection('privacy')}
-                  className={`block text-sm hover:text-blue-600 transition-colors ${
+                  className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
                     darkMode ? 'text-gray-400' : 'text-slate-600'
                   }`}
                 >
@@ -1023,7 +697,7 @@ function App() {
                 </button>
                 <button
                   onClick={() => scrollToSection('contact')}
-                  className={`block text-sm hover:text-blue-600 transition-colors ${
+                  className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
                     darkMode ? 'text-gray-400' : 'text-slate-600'
                   }`}
                 >
@@ -1041,7 +715,7 @@ function App() {
               </h4>
               <div className="space-y-2">
                 <a 
-                  href="mailto:contact@shopcompress.com"
+                  href="mailto:info@codedcheese.com"
                   className={`flex items-center gap-2 text-sm hover:text-blue-600 transition-colors ${
                     darkMode ? 'text-gray-400' : 'text-slate-600'
                   }`}
@@ -1076,7 +750,9 @@ function App() {
               </span>
               <a 
                 href="https://codedcheese.com" 
-                className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium"
+                className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium focus:outline-none focus:underline"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Coded Cheese
               </a>

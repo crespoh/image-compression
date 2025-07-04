@@ -903,12 +903,12 @@ function App() {
                         className="flex items-center gap-3 text-blue-600 hover:text-blue-700 transition-colors"
                       >
                         <Mail className="w-5 h-5" />
-                        contact@shopcompress.com
+                        info@codedcheese.com
                       </a>
                       <p className={`text-sm ${
                         darkMode ? 'text-gray-400' : 'text-slate-600'
                       }`}>
-                        We typically respond within 24 hours
+                        We typically respond within 48 hours
                       </p>
                     </div>
                   </div>
@@ -932,7 +932,7 @@ function App() {
                       href="mailto:features@shopcompress.com"
                       className="text-blue-600 hover:text-blue-700 transition-colors text-sm"
                     >
-                      features@shopcompress.com
+                      features@codedcheese.com
                     </a>
                   </div>
                 </div>
@@ -1019,7 +1019,7 @@ function App() {
                   }`}
                 >
                   <Mail className="w-4 h-4" />
-                  contact@shopcompress.com
+                  info@codedcheese.com
                 </a>
               </div>
             </div>

@@ -1047,7 +1047,7 @@ function App() {
                 by
               </span>
               <a 
-                href="#" 
+                href="https://www.codedcheese.com/" 
                 className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium"
               >
                 Coded Cheese

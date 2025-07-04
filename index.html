@@ -4,11 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Easy Image Compress - Optimize Images for Any Platform (Esty/Shopee/LinkedIn)</title>
-    <meta name="description" content="Compress JPG and PNG images client-side with presets for Etsy, Shopee, LinkedIn and more. No upload required - everything happens in your browser.">
+    <title>Easy Image Compress - Professional Image Optimization for Etsy, Shopee & LinkedIn</title>
+    <meta name="description" content="Compress JPG and PNG images client-side with presets for Etsy, Shopee, LinkedIn and more. No upload required - everything happens in your browser. Professional image optimization tool.">
+    <meta name="keywords" content="image compression, image optimizer, Etsy images, Shopee images, LinkedIn banner, JPG compress, PNG compress, client-side compression">
+    <meta name="author" content="Coded Cheese">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://easyimagecompress.com/">
+    <meta property="og:title" content="Easy Image Compress - Professional Image Optimization">
+    <meta property="og:description" content="Compress JPG and PNG images client-side with presets for Etsy, Shopee, LinkedIn and more. No upload required - everything happens in your browser.">
+    <meta property="og:image" content="https://easyimagecompress.com/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://easyimagecompress.com/">
+    <meta property="twitter:title" content="Easy Image Compress - Professional Image Optimization">
+    <meta property="twitter:description" content="Compress JPG and PNG images client-side with presets for Etsy, Shopee, LinkedIn and more. No upload required - everything happens in your browser.">
+    <meta property="twitter:image" content="https://easyimagecompress.com/og-image.jpg">
     
     <!-- Plausible Analytics -->
-    <script defer data-domain="your-domain.com" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="easyimagecompress.com" src="https://plausible.io/js/script.js"></script>
     
     <!-- Sentry Error Tracking -->
     <script
@@ -23,10 +39,43 @@
           integrations: [
             new Sentry.BrowserTracing(),
           ],
-          tracesSampleRate: 1.0,
-          environment: "production"
+          tracesSampleRate: 0.1,
+          environment: "production",
+          beforeSend(event) {
+            // Filter out non-critical errors
+            if (event.exception) {
+              const error = event.exception.values[0];
+              if (error && error.type === 'ChunkLoadError') {
+                return null; // Don't send chunk load errors
+              }
+            }
+            return event;
+          }
         });
       }
+    </script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Easy Image Compress",
+      "description": "Professional image compression tool for e-commerce and content creators",
+      "url": "https://easyimagecompress.com",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "Coded Cheese",
+        "url": "https://www.codedcheese.com"
+      }
+    }
     </script>
   </head>
   <body>

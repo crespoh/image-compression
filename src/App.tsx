@@ -610,7 +610,7 @@ function App() {
                       <p className={`text-sm ${
                         darkMode ? 'text-gray-400' : 'text-slate-600'
                       }`}>
-                        We typically respond within 24 hours
+                        We typically respond within 48 hours
                       </p>
                     </div>
                   </div>

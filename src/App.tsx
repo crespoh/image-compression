@@ -149,55 +149,45 @@ function App() {
   ): Promise<CompressedImage> => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
-    
-    let { width, height } = img;
-    
-    if (preset === 'custom' && customDimensions) {
+    let width = img.width;
+    let height = img.height;
+
+    if (preset === 'linkedin') {
+      // LinkedIn banner: exact resize to specific dimensions
+      width = PRESETS.linkedin.maxWidth;
+      height = PRESETS.linkedin.maxHeight;
+    } else if (preset === 'custom' && customDimensions) {
       // Custom preset: use user-defined dimensions
-      const aspectRatio = width / height;
-      const maxWidth = customDimensions.width;
-      const maxHeight = customDimensions.height;
-      
-      // Scale down to fit within custom dimensions while maintaining aspect ratio
+      const aspectRatio = img.width / img.height;
+      let maxWidth = customDimensions.width;
+      let maxHeight = customDimensions.height;
       if (width > maxWidth) {
         width = maxWidth;
-        height = width / aspectRatio;
+        height = Math.round(width / aspectRatio);
       }
       if (height > maxHeight) {
         height = maxHeight;
-        width = height * aspectRatio;
+        width = Math.round(height * aspectRatio);
       }
     } else {
-      // Named presets: use predefined configurations
+      // Other presets: scale down while maintaining aspect ratio
       const presetConfig = PRESETS[preset];
-      
-      if (preset === 'linkedin') {
-        // LinkedIn banner: exact resize to specific dimensions
+      const aspectRatio = img.width / img.height;
+      if (width > presetConfig.maxWidth) {
         width = presetConfig.maxWidth;
+        height = Math.round(width / aspectRatio);
+      }
+      if (height > presetConfig.maxHeight) {
         height = presetConfig.maxHeight;
-      } else {
-        // Other presets: scale down while maintaining aspect ratio
-        const aspectRatio = width / height;
-        if (width > presetConfig.maxWidth) {
-          width = presetConfig.maxWidth;
-          height = width / aspectRatio;
-        }
-        if (height > presetConfig.maxHeight) {
-          height = presetConfig.maxHeight;
-          width = height * aspectRatio;
-        }
+        width = Math.round(height * aspectRatio);
       }
     }
-    
+
     canvas.width = width;
     canvas.height = height;
-    
-    // Use high-quality scaling
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, 0, 0, width, height);
-    
-    // Convert to blob with compression
     return new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
@@ -359,15 +349,7 @@ function App() {
       setCustomHeight(1080);
     }
     
-    // Recompress image with new preset if we have one
-    if (originalImage) {
-      // Use a timeout to ensure state updates are applied before recompression
-      const timeout = setTimeout(async () => {
-        await recompressImage();
-        setRecompressionTimeout(null);
-      }, 100);
-      setRecompressionTimeout(timeout);
-    }
+    // Remove timeout-based recompression here
   };
 
   const handleQualityChange = async (newQuality: number) => {
@@ -490,6 +472,23 @@ function App() {
       }
     };
   }, [originalImageUrl, compressedImageUrl]);
+
+  // Add useEffect to trigger recompression after preset or custom dimension changes
+  useEffect(() => {
+    if (!originalImage) return;
+    // Only recompress if not currently processing
+    if (isProcessing) return;
+    // Validate custom dimensions if in custom mode
+    if (selectedPreset === 'custom') {
+      const validationError = validateDimensions(customWidth, customHeight);
+      if (validationError) {
+        setDimensionError(validationError);
+        return;
+      }
+    }
+    recompressImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPreset, customWidth, customHeight]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

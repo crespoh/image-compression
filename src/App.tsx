@@ -884,4 +884,83 @@ function App() {
                   onClick={() => scrollToSection('about')}
                   className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
                     darkMode ? 'text-gray-400' : 'text-slate-600'
-                  }`
+                  }`}
+                >
+                  About This Tool
+                </button>
+                <button
+                  onClick={() => scrollToSection('privacy')}
+                  className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
+                    darkMode ? 'text-gray-400' : 'text-slate-600'
+                  }`}
+                >
+                  Privacy & Security
+                </button>
+                <button
+                  onClick={() => scrollToSection('contact')}
+                  className={`block text-sm hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 ${
+                    darkMode ? 'text-gray-400' : 'text-slate-600'
+                  }`}
+                >
+                  Contact
+                </button>
+              </nav>
+            </div>
+            {/* Contact Info */}
+            <div>
+              <h4 className={`font-semibold mb-4 ${
+                darkMode ? 'text-gray-200' : 'text-slate-700'
+              }`}>
+                Contact
+              </h4>
+              <div className="space-y-2">
+                <a 
+                  href="mailto:info@codedcheese.com"
+                  className={`flex items-center gap-2 text-sm hover:text-blue-600 transition-colors ${
+                    darkMode ? 'text-gray-400' : 'text-slate-600'
+                  }`}
+                >
+                  <Mail className="w-4 h-4" />
+                  info@codedcheese.com
+                </a>
+              </div>
+            </div>
+          </div>
+          {/* Bottom Bar */}
+          <div className={`pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 ${
+            darkMode ? 'border-gray-700' : 'border-slate-200'
+          }`}>
+            <p className={`text-sm ${
+              darkMode ? 'text-gray-400' : 'text-slate-600'
+            }`}>
+              © {new Date().getFullYear()} Easy Image Compress. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm ${
+                darkMode ? 'text-gray-400' : 'text-slate-600'
+              }`}>
+                Built with
+              </span>
+              <Heart className="w-4 h-4 text-red-500" />
+              <span className={`text-sm ${
+                darkMode ? 'text-gray-400' : 'text-slate-600'
+              }`}>
+                by
+              </span>
+              <a 
+                href="https://codedcheese.com" 
+                className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium focus:outline-none focus:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Coded Cheese
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;

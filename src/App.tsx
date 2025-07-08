@@ -564,6 +564,7 @@ function App() {
                   dimensionError={dimensionError}
                   darkMode={darkMode}
                   isProcessing={isProcessing}
+                  compressedImage={compressedImage}
                 />
 
                 {/* Image Preview */}

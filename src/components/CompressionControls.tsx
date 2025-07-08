@@ -12,6 +12,7 @@ interface CompressionControlsProps {
   dimensionError: string | null;
   darkMode: boolean;
   isProcessing: boolean;
+  compressedImage?: { width: number; height: number } | null;
 }
 
 const PRESETS = {
@@ -31,7 +32,8 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
   onCustomDimensionChange,
   dimensionError,
   darkMode,
-  isProcessing
+  isProcessing,
+  compressedImage
 }) => {
   return (
     <div className="space-y-6">
@@ -171,7 +173,14 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
               />
             </div>
           </div>
-          
+          {/* Actual output size */}
+          {compressedImage && (
+            <div className={`mt-3 text-xs ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}
+                 aria-live="polite">
+              <span className="font-medium">Actual output size: </span>
+              <span>{compressedImage.width} × {compressedImage.height} px</span>
+            </div>
+          )}
           {/* Dimension Error */}
           {dimensionError && (
             <div 

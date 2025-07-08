@@ -82,6 +82,15 @@ function App() {
     }
   }, []);
 
+  // Scroll to top on page load/refresh
+  useEffect(() => {
+    // Only scroll to top on initial page load, not on component re-renders
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []); // Empty dependency array ensures this only runs once on mount
+
   // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;

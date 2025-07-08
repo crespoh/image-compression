@@ -73,6 +73,9 @@ function App() {
   const [customHeight, setCustomHeight] = useState(1080);
   const [dimensionError, setDimensionError] = useState<string | null>(null);
   const [recompressionTimeout, setRecompressionTimeout] = useState<NodeJS.Timeout | null>(null);
+  // Track the object URLs to revoke them later
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [compressedImageUrl, setCompressedImageUrl] = useState<string | null>(null);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -195,19 +198,21 @@ function App() {
     ctx.drawImage(img, 0, 0, width, height);
     
     // Convert to blob with compression
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            const dataUrl = canvas.toDataURL('image/jpeg', customQuality / 100);
-            resolve({
-              blob,
-              dataUrl,
-              width,
-              height,
-              size: blob.size
-            });
+          if (!blob) {
+            reject(new Error('Failed to compress image: canvas.toBlob returned null.'));
+            return;
           }
+          const dataUrl = canvas.toDataURL('image/jpeg', customQuality / 100);
+          resolve({
+            blob,
+            dataUrl,
+            width,
+            height,
+            size: blob.size
+          });
         },
         'image/jpeg',
         customQuality / 100
@@ -249,6 +254,11 @@ function App() {
     setError(null);
     setDimensionError(null);
     setCompressedImage(null);
+    // Revoke previous original image URL
+    if (originalImageUrl) {
+      URL.revokeObjectURL(originalImageUrl);
+      setOriginalImageUrl(null);
+    }
     
     const validationError = validateFile(file);
     if (validationError) {
@@ -276,6 +286,7 @@ function App() {
       };
 
       setOriginalImage(imageData);
+      setOriginalImageUrl(imageData.dataUrl);
       
       // Track file upload
       trackEvent('Image Upload', {
@@ -300,7 +311,13 @@ function App() {
       }
       
       const compressed = await compressImage(img, selectedPreset, quality, customDimensions);
+      // Revoke previous compressed image URL
+      if (compressedImageUrl) {
+        URL.revokeObjectURL(compressedImageUrl);
+        setCompressedImageUrl(null);
+      }
       setCompressedImage(compressed);
+      setCompressedImageUrl(compressed.dataUrl);
       setIsProcessing(false);
 
       // Track compression completion
@@ -461,6 +478,18 @@ function App() {
       }
     };
   }, [recompressionTimeout]);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (originalImageUrl) {
+        URL.revokeObjectURL(originalImageUrl);
+      }
+      if (compressedImageUrl) {
+        URL.revokeObjectURL(compressedImageUrl);
+      }
+    };
+  }, [originalImageUrl, compressedImageUrl]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

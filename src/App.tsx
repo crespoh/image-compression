@@ -72,6 +72,7 @@ function App() {
   const [customWidth, setCustomWidth] = useState(1920);
   const [customHeight, setCustomHeight] = useState(1080);
   const [dimensionError, setDimensionError] = useState<string | null>(null);
+  const [recompressionTimeout, setRecompressionTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -319,21 +320,36 @@ function App() {
   };
 
   const handlePresetChange = async (preset: Preset) => {
+    // Clear any pending recompression
+    if (recompressionTimeout) {
+      clearTimeout(recompressionTimeout);
+      setRecompressionTimeout(null);
+    }
+    
     setSelectedPreset(preset);
     setDimensionError(null);
+    setError(null);
     trackEvent('Preset Changed', { preset });
     
-    // Reset custom dimensions when switching away from custom preset
+    // Reset custom dimensions to defaults when switching away from custom preset
     if (preset !== 'custom') {
+      const presetConfig = PRESETS[preset];
+      setCustomWidth(presetConfig.maxWidth);
+      setCustomHeight(presetConfig.maxHeight);
+    } else {
+      // When switching to custom, use sensible defaults
       setCustomWidth(1920);
       setCustomHeight(1080);
     }
     
+    // Recompress image with new preset if we have one
     if (originalImage) {
-      // Small delay to ensure state updates are applied
-      setTimeout(async () => {
+      // Use a timeout to ensure state updates are applied before recompression
+      const timeout = setTimeout(async () => {
         await recompressImage();
-      }, 50);
+        setRecompressionTimeout(null);
+      }, 100);
+      setRecompressionTimeout(timeout);
     }
   };
 
@@ -351,6 +367,12 @@ function App() {
   };
 
   const handleCustomDimensionChange = async (dimension: 'width' | 'height', value: string) => {
+    // Clear any pending recompression
+    if (recompressionTimeout) {
+      clearTimeout(recompressionTimeout);
+      setRecompressionTimeout(null);
+    }
+    
     const numValue = parseInt(value) || 0;
     
     if (dimension === 'width') {
@@ -366,13 +388,15 @@ function App() {
     
     // Only recompress if we have an image, are in custom mode, and value is valid
     if (originalImage && selectedPreset === 'custom' && numValue > 0) {
-      // Debounce the recompression to avoid too many calls while typing
-      setTimeout(async () => {
+      // Debounce the recompression to avoid too many calls while user is typing
+      const timeout = setTimeout(async () => {
         // Double-check we're still in custom mode after the delay
         if (selectedPreset === 'custom') {
           await recompressImage();
         }
-      }, 800);
+        setRecompressionTimeout(null);
+      }, 1000); // Increased debounce time for better UX
+      setRecompressionTimeout(timeout);
     }
   };
 
@@ -395,11 +419,21 @@ function App() {
   };
 
   const resetApp = () => {
+    // Clear any pending recompression
+    if (recompressionTimeout) {
+      clearTimeout(recompressionTimeout);
+      setRecompressionTimeout(null);
+    }
+    
     setOriginalImage(null);
     setCompressedImage(null);
     setError(null);
     setDimensionError(null);
     setIsProcessing(false);
+    setSelectedPreset('etsy'); // Reset to default preset
+    setQuality(80); // Reset to default quality
+    setCustomWidth(1920); // Reset custom dimensions
+    setCustomHeight(1080);
     trackEvent('App Reset');
     
     // Smooth scroll to top of the page after a brief delay to allow DOM to update
@@ -418,6 +452,15 @@ function App() {
       }, 500); // Wait for scroll animation to complete
     }, 100); // Small delay to ensure DOM has updated
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (recompressionTimeout) {
+        clearTimeout(recompressionTimeout);
+      }
+    };
+  }, [recompressionTimeout]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

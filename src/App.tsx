@@ -371,6 +371,22 @@ function App() {
     setDimensionError(null);
     setIsProcessing(false);
     trackEvent('App Reset');
+    
+    // Smooth scroll to top of the page after a brief delay to allow DOM to update
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Focus on the upload area after scrolling completes
+      setTimeout(() => {
+        const uploadArea = document.querySelector('[role="button"][aria-label="Upload image file"]') as HTMLElement;
+        if (uploadArea) {
+          uploadArea.focus();
+        }
+      }, 500); // Wait for scroll animation to complete
+    }, 100); // Small delay to ensure DOM has updated
   };
 
   const scrollToSection = (sectionId: string) => {

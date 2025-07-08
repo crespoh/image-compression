@@ -28,7 +28,7 @@ const MAX_DIMENSIONS = 8000;
 const PRESETS = {
   etsy: { name: 'Etsy', targetSize: 500 * 1024, maxWidth: 2000, maxHeight: 2000 },
   shopee: { name: 'Shopee', targetSize: 2 * 1024 * 1024, maxWidth: 3000, maxHeight: 3000 },
-  linkedin: { name: 'LinkedIn Banner', targetSize: 8 * 1024 * 1024, maxWidth: 1584, maxHeight: 396, exactResize: true },
+  linkedin: { name: 'LinkedIn Banner', targetSize: 2 * 1024 * 1024, maxWidth: 1584, maxHeight: 396, exactResize: true },
   custom: { name: 'Custom', targetSize: 1 * 1024 * 1024, maxWidth: 1920, maxHeight: 1080 }
 };
 
@@ -146,33 +146,42 @@ function App() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     
-    let presetConfig = PRESETS[preset];
-    
-    // Use custom dimensions if provided and preset is custom
-    if (preset === 'custom' && customDimensions) {
-      presetConfig = {
-        ...presetConfig,
-        maxWidth: customDimensions.width,
-        maxHeight: customDimensions.height
-      };
-    }
-    
     let { width, height } = img;
     
-    // Handle LinkedIn banner exact resize
-    if (preset === 'linkedin') {
-      width = presetConfig.maxWidth;
-      height = presetConfig.maxHeight;
-    } else {
-      // Calculate new dimensions while maintaining aspect ratio
+    if (preset === 'custom' && customDimensions) {
+      // Custom preset: use user-defined dimensions
       const aspectRatio = width / height;
-      if (width > presetConfig.maxWidth) {
-        width = presetConfig.maxWidth;
+      const maxWidth = customDimensions.width;
+      const maxHeight = customDimensions.height;
+      
+      // Scale down to fit within custom dimensions while maintaining aspect ratio
+      if (width > maxWidth) {
+        width = maxWidth;
         height = width / aspectRatio;
       }
-      if (height > presetConfig.maxHeight) {
-        height = presetConfig.maxHeight;
+      if (height > maxHeight) {
+        height = maxHeight;
         width = height * aspectRatio;
+      }
+    } else {
+      // Named presets: use predefined configurations
+      const presetConfig = PRESETS[preset];
+      
+      if (preset === 'linkedin') {
+        // LinkedIn banner: exact resize to specific dimensions
+        width = presetConfig.maxWidth;
+        height = presetConfig.maxHeight;
+      } else {
+        // Other presets: scale down while maintaining aspect ratio
+        const aspectRatio = width / height;
+        if (width > presetConfig.maxWidth) {
+          width = presetConfig.maxWidth;
+          height = width / aspectRatio;
+        }
+        if (height > presetConfig.maxHeight) {
+          height = presetConfig.maxHeight;
+          width = height * aspectRatio;
+        }
       }
     }
     
@@ -314,8 +323,17 @@ function App() {
     setDimensionError(null);
     trackEvent('Preset Changed', { preset });
     
+    // Reset custom dimensions when switching away from custom preset
+    if (preset !== 'custom') {
+      setCustomWidth(1920);
+      setCustomHeight(1080);
+    }
+    
     if (originalImage) {
-      await recompressImage();
+      // Small delay to ensure state updates are applied
+      setTimeout(async () => {
+        await recompressImage();
+      }, 50);
     }
   };
 
@@ -341,17 +359,20 @@ function App() {
       setCustomHeight(numValue);
     }
     
-    // Only recompress if we have an image and the value is valid
-    if (originalImage && selectedPreset === 'custom') {
-      const newWidth = dimension === 'width' ? numValue : customWidth;
-      const newHeight = dimension === 'height' ? numValue : customHeight;
-      
-      // Debounce the recompression to avoid too many calls
+    // Clear any existing dimension errors when user starts typing
+    if (dimensionError) {
+      setDimensionError(null);
+    }
+    
+    // Only recompress if we have an image, are in custom mode, and value is valid
+    if (originalImage && selectedPreset === 'custom' && numValue > 0) {
+      // Debounce the recompression to avoid too many calls while typing
       setTimeout(async () => {
+        // Double-check we're still in custom mode after the delay
         if (selectedPreset === 'custom') {
           await recompressImage();
         }
-      }, 500);
+      }, 800);
     }
   };
 

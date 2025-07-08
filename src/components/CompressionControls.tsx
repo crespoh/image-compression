@@ -17,7 +17,7 @@ interface CompressionControlsProps {
 const PRESETS = {
   etsy: { name: 'Etsy', description: 'Perfect for product listings', targetSize: '500KB', maxDimensions: '2000×2000' },
   shopee: { name: 'Shopee', description: 'Optimized for marketplace', targetSize: '2MB', maxDimensions: '3000×3000' },
-  linkedin: { name: 'LinkedIn Banner', description: 'Professional banners', targetSize: '8MB', maxDimensions: '1584×396' },
+  linkedin: { name: 'LinkedIn Banner', description: 'Professional banners', targetSize: '2MB', maxDimensions: '1584×396 (exact)' },
   custom: { name: 'Custom', description: 'Your own settings', targetSize: '1MB', maxDimensions: '1920×1080' }
 };
 
@@ -85,7 +85,7 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
                   ? 'text-gray-500'
                   : 'text-slate-400'
               }`}>
-                Target: {preset.targetSize} • {key === 'custom' ? 'Custom dimensions' : `Max: ${preset.maxDimensions}`}
+                Target: {preset.targetSize} • {key === 'custom' ? 'Custom dimensions' : `${preset.maxDimensions}`}
               </div>
             </button>
           ))}
@@ -94,19 +94,29 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
 
       {/* Custom Dimensions */}
       {selectedPreset === 'custom' && (
-        <div>
+        <div className={`p-4 rounded-lg border ${
+          darkMode ? 'bg-gray-700/30 border-gray-600' : 'bg-blue-50 border-blue-200'
+        }`}>
           <label className={`block text-sm font-semibold mb-3 flex items-center gap-2 ${
-            darkMode ? 'text-gray-200' : 'text-slate-700'
+            darkMode ? 'text-blue-300' : 'text-blue-700'
           }`}>
             <Ruler className="w-4 h-4" />
             Custom Dimensions
           </label>
+          
+          <div className={`mb-4 text-sm ${
+            darkMode ? 'text-gray-300' : 'text-blue-600'
+          }`}>
+            <p className="font-medium mb-1">Custom Mode Active</p>
+            <p className="text-xs">Set your own maximum width and height. Images will be resized to fit within these dimensions while maintaining aspect ratio.</p>
+          </div>
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label 
                 htmlFor="custom-width"
                 className={`block text-xs font-medium mb-2 ${
-                  darkMode ? 'text-gray-300' : 'text-slate-600'
+                  darkMode ? 'text-gray-300' : 'text-blue-600'
                 }`}
               >
                 Max Width (px)
@@ -135,7 +145,7 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
               <label 
                 htmlFor="custom-height"
                 className={`block text-xs font-medium mb-2 ${
-                  darkMode ? 'text-gray-300' : 'text-slate-600'
+                  darkMode ? 'text-gray-300' : 'text-blue-600'
                 }`}
               >
                 Max Height (px)
@@ -179,13 +189,40 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
           )}
           
           <div className={`mt-3 text-xs ${
-            darkMode ? 'text-gray-400' : 'text-slate-500'
+            darkMode ? 'text-gray-400' : 'text-blue-500'
           }`}>
-            <p>• Images will be resized to fit within these dimensions while maintaining aspect ratio</p>
             <p>• Maximum allowed: 8000×8000 pixels</p>
+            <p>• Enter values between 1 and 8000</p>
           </div>
         </div>
       )}
+      
+      {/* Preset Information */}
+      {selectedPreset !== 'custom' && (
+        <div className={`p-4 rounded-lg border ${
+          darkMode ? 'bg-gray-700/30 border-gray-600' : 'bg-slate-50 border-slate-200'
+        }`}>
+          <div className={`text-sm ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
+            <p className="font-medium mb-2 flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              {PRESETS[selectedPreset as keyof typeof PRESETS].name} Settings
+            </p>
+            <div className="space-y-1 text-xs">
+              <p>• Target file size: {PRESETS[selectedPreset as keyof typeof PRESETS].targetSize}</p>
+              <p>• Dimensions: {PRESETS[selectedPreset as keyof typeof PRESETS].maxDimensions}</p>
+              {selectedPreset === 'linkedin' && (
+                <p className="text-amber-600 dark:text-amber-400">• Images will be resized to exact LinkedIn banner dimensions</p>
+              )}
+              {selectedPreset !== 'linkedin' && (
+                <p>• Images will be scaled down while maintaining aspect ratio</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Quality Slider */}
       <div>
         <label 

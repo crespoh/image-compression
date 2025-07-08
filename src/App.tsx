@@ -244,7 +244,7 @@ function App() {
     setError(null);
     setDimensionError(null);
     setCompressedImage(null);
-    // Revoke previous original image URL
+    // Revoke previous original image URL ONLY if a new file is loaded
     if (originalImageUrl) {
       URL.revokeObjectURL(originalImageUrl);
       setOriginalImageUrl(null);
@@ -461,7 +461,7 @@ function App() {
     };
   }, [recompressionTimeout]);
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs on unmount ONLY
   useEffect(() => {
     return () => {
       if (originalImageUrl) {
@@ -471,7 +471,7 @@ function App() {
         URL.revokeObjectURL(compressedImageUrl);
       }
     };
-  }, [originalImageUrl, compressedImageUrl]);
+  }, []);
 
   // Add useEffect to trigger recompression after preset or custom dimension changes
   useEffect(() => {

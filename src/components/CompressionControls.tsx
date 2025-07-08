@@ -1,11 +1,15 @@
 import React from 'react';
-import { Settings, Zap } from 'lucide-react';
+import { Settings, Zap, Ruler, AlertCircle } from 'lucide-react';
 
 interface CompressionControlsProps {
   selectedPreset: string;
   onPresetChange: (preset: string) => void;
   quality: number;
   onQualityChange: (quality: number) => void;
+  customWidth: number;
+  customHeight: number;
+  onCustomDimensionChange: (dimension: 'width' | 'height', value: string) => void;
+  dimensionError: string | null;
   darkMode: boolean;
   isProcessing: boolean;
 }
@@ -22,6 +26,10 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
   onPresetChange,
   quality,
   onQualityChange,
+  customWidth,
+  customHeight,
+  onCustomDimensionChange,
+  dimensionError,
   darkMode,
   isProcessing
 }) => {
@@ -77,13 +85,107 @@ const CompressionControls: React.FC<CompressionControlsProps> = ({
                   ? 'text-gray-500'
                   : 'text-slate-400'
               }`}>
-                Target: {preset.targetSize} • Max: {preset.maxDimensions}
+                Target: {preset.targetSize} • {key === 'custom' ? 'Custom dimensions' : `Max: ${preset.maxDimensions}`}
               </div>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Custom Dimensions */}
+      {selectedPreset === 'custom' && (
+        <div>
+          <label className={`block text-sm font-semibold mb-3 flex items-center gap-2 ${
+            darkMode ? 'text-gray-200' : 'text-slate-700'
+          }`}>
+            <Ruler className="w-4 h-4" />
+            Custom Dimensions
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label 
+                htmlFor="custom-width"
+                className={`block text-xs font-medium mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-slate-600'
+                }`}
+              >
+                Max Width (px)
+              </label>
+              <input
+                id="custom-width"
+                type="number"
+                min="1"
+                max="8000"
+                value={customWidth}
+                onChange={(e) => onCustomDimensionChange('width', e.target.value)}
+                disabled={isProcessing}
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  dimensionError
+                    ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600'
+                    : darkMode
+                    ? 'border-gray-600 bg-gray-700 text-gray-200 focus:border-blue-500'
+                    : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500'
+                }`}
+                placeholder="1920"
+                aria-label="Maximum width in pixels"
+                aria-describedby={dimensionError ? "dimension-error" : undefined}
+              />
+            </div>
+            <div>
+              <label 
+                htmlFor="custom-height"
+                className={`block text-xs font-medium mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-slate-600'
+                }`}
+              >
+                Max Height (px)
+              </label>
+              <input
+                id="custom-height"
+                type="number"
+                min="1"
+                max="8000"
+                value={customHeight}
+                onChange={(e) => onCustomDimensionChange('height', e.target.value)}
+                disabled={isProcessing}
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  dimensionError
+                    ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600'
+                    : darkMode
+                    ? 'border-gray-600 bg-gray-700 text-gray-200 focus:border-blue-500'
+                    : 'border-slate-300 bg-white text-slate-900 focus:border-blue-500'
+                }`}
+                placeholder="1080"
+                aria-label="Maximum height in pixels"
+                aria-describedby={dimensionError ? "dimension-error" : undefined}
+              />
+            </div>
+          </div>
+          
+          {/* Dimension Error */}
+          {dimensionError && (
+            <div 
+              id="dimension-error"
+              className="flex items-start gap-2 mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+              role="alert"
+              aria-live="polite"
+            >
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-700 dark:text-red-300 font-medium text-sm">Invalid Dimensions</p>
+                <p className="text-red-600 dark:text-red-400 text-xs">{dimensionError}</p>
+              </div>
+            </div>
+          )}
+          
+          <div className={`mt-3 text-xs ${
+            darkMode ? 'text-gray-400' : 'text-slate-500'
+          }`}>
+            <p>• Images will be resized to fit within these dimensions while maintaining aspect ratio</p>
+            <p>• Maximum allowed: 8000×8000 pixels</p>
+          </div>
+        </div>
+      )}
       {/* Quality Slider */}
       <div>
         <label 

@@ -69,6 +69,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [previewMode, setPreviewMode] = useState<'side-by-side' | 'toggle'>('side-by-side');
   const [showOriginal, setShowOriginal] = useState(true);
+  const [customWidth, setCustomWidth] = useState(1920);
+  const [customHeight, setCustomHeight] = useState(1080);
+  const [dimensionError, setDimensionError] = useState<string | null>(null);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -94,6 +97,18 @@ function App() {
     trackEvent('Dark Mode Toggle', { enabled: newDarkMode });
   };
 
+  const validateDimensions = (width: number, height: number): string | null => {
+    if (!Number.isInteger(width) || !Number.isInteger(height)) {
+      return 'Width and height must be whole numbers.';
+    }
+    if (width <= 0 || height <= 0) {
+      return 'Width and height must be positive numbers.';
+    }
+    if (width > MAX_DIMENSIONS || height > MAX_DIMENSIONS) {
+      return `Width and height must be less than ${MAX_DIMENSIONS}px.`;
+    }
+    return null;
+  };
   const validateFile = (file: File): string | null => {
     if (!file.type.match(/^image\/(jpeg|jpg|png)$/i)) {
       return 'Please upload only JPG or PNG images. Other formats are not supported.';
@@ -116,12 +131,23 @@ function App() {
   const compressImage = async (
     img: HTMLImageElement,
     preset: Preset,
-    customQuality: number
+    customQuality: number,
+    customDimensions?: { width: number; height: number }
   ): Promise<CompressedImage> => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     
-    const presetConfig = PRESETS[preset];
+    let presetConfig = PRESETS[preset];
+    
+    // Use custom dimensions if provided and preset is custom
+    if (preset === 'custom' && customDimensions) {
+      presetConfig = {
+        ...presetConfig,
+        maxWidth: customDimensions.width,
+        maxHeight: customDimensions.height
+      };
+    }
+    
     let { width, height } = img;
     
     // Handle LinkedIn banner exact resize
@@ -170,8 +196,39 @@ function App() {
     });
   };
 
+  const recompressImage = async () => {
+    if (!originalImage) return;
+    
+    setIsProcessing(true);
+    setError(null);
+    setDimensionError(null);
+    
+    try {
+      const img = await loadImage(originalImage.file);
+      
+      let customDimensions;
+      if (selectedPreset === 'custom') {
+        const validationError = validateDimensions(customWidth, customHeight);
+        if (validationError) {
+          setDimensionError(validationError);
+          setIsProcessing(false);
+          return;
+        }
+        customDimensions = { width: customWidth, height: customHeight };
+      }
+      
+      const compressed = await compressImage(img, selectedPreset, quality, customDimensions);
+      setCompressedImage(compressed);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      setError('Failed to reprocess image. Please try again.');
+      logError(error, 'Image Recompression');
+    }
+    setIsProcessing(false);
+  };
   const handleFile = async (file: File) => {
     setError(null);
+    setDimensionError(null);
     setCompressedImage(null);
     
     const validationError = validateFile(file);
@@ -211,7 +268,19 @@ function App() {
       
       // Auto-compress with selected preset
       setIsProcessing(true);
-      const compressed = await compressImage(img, selectedPreset, quality);
+      
+      let customDimensions;
+      if (selectedPreset === 'custom') {
+        const validationError = validateDimensions(customWidth, customHeight);
+        if (validationError) {
+          setDimensionError(validationError);
+          setIsProcessing(false);
+          return;
+        }
+        customDimensions = { width: customWidth, height: customHeight };
+      }
+      
+      const compressed = await compressImage(img, selectedPreset, quality, customDimensions);
       setCompressedImage(compressed);
       setIsProcessing(false);
 
@@ -233,20 +302,11 @@ function App() {
 
   const handlePresetChange = async (preset: Preset) => {
     setSelectedPreset(preset);
+    setDimensionError(null);
     trackEvent('Preset Changed', { preset });
     
     if (originalImage) {
-      setIsProcessing(true);
-      try {
-        const img = await loadImage(originalImage.file);
-        const compressed = await compressImage(img, preset, quality);
-        setCompressedImage(compressed);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error occurred');
-        setError('Failed to reprocess image with new preset.');
-        logError(error, 'Preset Change');
-      }
-      setIsProcessing(false);
+      await recompressImage();
     }
   };
 
@@ -254,22 +314,35 @@ function App() {
     setQuality(newQuality);
     
     if (originalImage) {
-      setIsProcessing(true);
-      try {
-        const img = await loadImage(originalImage.file);
-        const compressed = await compressImage(img, selectedPreset, newQuality);
-        setCompressedImage(compressed);
-        
-        trackEvent('Quality Changed', { 
-          quality: newQuality, 
-          preset: selectedPreset 
-        });
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error occurred');
-        setError('Failed to reprocess image with new quality setting.');
-        logError(error, 'Quality Change');
-      }
-      setIsProcessing(false);
+      await recompressImage();
+      
+      trackEvent('Quality Changed', { 
+        quality: newQuality, 
+        preset: selectedPreset 
+      });
+    }
+  };
+
+  const handleCustomDimensionChange = async (dimension: 'width' | 'height', value: string) => {
+    const numValue = parseInt(value) || 0;
+    
+    if (dimension === 'width') {
+      setCustomWidth(numValue);
+    } else {
+      setCustomHeight(numValue);
+    }
+    
+    // Only recompress if we have an image and the value is valid
+    if (originalImage && selectedPreset === 'custom') {
+      const newWidth = dimension === 'width' ? numValue : customWidth;
+      const newHeight = dimension === 'height' ? numValue : customHeight;
+      
+      // Debounce the recompression to avoid too many calls
+      setTimeout(async () => {
+        if (selectedPreset === 'custom') {
+          await recompressImage();
+        }
+      }, 500);
     }
   };
 
@@ -295,6 +368,7 @@ function App() {
     setOriginalImage(null);
     setCompressedImage(null);
     setError(null);
+    setDimensionError(null);
     setIsProcessing(false);
     trackEvent('App Reset');
   };
@@ -367,6 +441,10 @@ function App() {
                   onPresetChange={handlePresetChange}
                   quality={quality}
                   onQualityChange={handleQualityChange}
+                  customWidth={customWidth}
+                  customHeight={customHeight}
+                  onCustomDimensionChange={handleCustomDimensionChange}
+                  dimensionError={dimensionError}
                   darkMode={darkMode}
                   isProcessing={isProcessing}
                 />

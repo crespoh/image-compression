@@ -241,6 +241,10 @@ function App() {
     setIsProcessing(false);
   };
   const handleFile = async (file: File) => {
+    // Plausible event for upload started
+    if (typeof window !== 'undefined' && (window as any).plausible) {
+      (window as any).plausible('Upload Started');
+    }
     setError(null);
     setDimensionError(null);
     setCompressedImage(null);

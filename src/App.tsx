@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Moon, Sun, RotateCcw, Shield, Mail, Heart } from 'lucide-react';
+import { Zap, Moon, Sun, RotateCcw, Shield, Mail, Heart, Menu, X } from 'lucide-react';
 import ImageUploader from './components/ImageUploader';
 import CompressionControls from './components/CompressionControls';
 import ImagePreview from './components/ImagePreview';
@@ -76,6 +76,8 @@ function App() {
   // Track the object URLs to revoke them later
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [compressedImageUrl, setCompressedImageUrl] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -94,6 +96,30 @@ function App() {
       behavior: 'smooth'
     });
   }, []); // Empty dependency array ensures this only runs once on mount
+
+  // Handle scroll to update active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['home', 'why-use', 'how-it-works', 'tips', 'about'];
+      const scrollPosition = window.scrollY + 100; // Offset for sticky nav
+      
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Call once to set initial state
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -502,8 +528,14 @@ function App() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const navHeight = 80; // Account for sticky nav height
+      const elementPosition = element.offsetTop - navHeight;
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      });
     }
+    setMobileMenuOpen(false); // Close mobile menu after clicking
   };
 
   return (
@@ -512,8 +544,124 @@ function App() {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-slate-50 to-slate-100'
     }`}>
+      {/* Navigation Bar */}
+      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+        darkMode 
+          ? 'bg-gray-900/95 backdrop-blur-sm border-gray-700' 
+          : 'bg-white/95 backdrop-blur-sm border-slate-200'
+      } border-b shadow-sm`}>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <button
+              onClick={() => scrollToSection('home')}
+              className="flex items-center gap-2 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg px-2 py-1"
+            >
+              <div className="p-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <span className={darkMode ? 'text-gray-100' : 'text-slate-800'}>
+                Easy Image Compress
+              </span>
+            </button>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'why-use', label: 'Why Use' },
+                { id: 'how-it-works', label: 'How It Works' },
+                { id: 'tips', label: 'Tips' },
+                { id: 'about', label: 'About' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    activeSection === item.id
+                      ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
+                      : darkMode
+                      ? 'text-gray-300 hover:text-gray-100 hover:bg-gray-800'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Dark Mode Toggle & Mobile Menu */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+                title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {darkMode ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`md:hidden p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+                aria-label="Toggle mobile menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-4 h-4" />
+                ) : (
+                  <Menu className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className={`md:hidden py-4 border-t ${
+              darkMode ? 'border-gray-700' : 'border-slate-200'
+            }`}>
+              <div className="space-y-2">
+                {[
+                  { id: 'home', label: 'Home' },
+                  { id: 'why-use', label: 'Why Use' },
+                  { id: 'how-it-works', label: 'How It Works' },
+                  { id: 'tips', label: 'Tips' },
+                  { id: 'about', label: 'About' }
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`block w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeSection === item.id
+                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
+                        : darkMode
+                        ? 'text-gray-300 hover:text-gray-100 hover:bg-gray-800'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
       {/* Main Application */}
-      <div className="flex items-center justify-center p-4 min-h-screen">
+      <div id="home" className="flex items-center justify-center p-4 min-h-screen">
         <div className={`w-full max-w-5xl rounded-2xl shadow-xl border overflow-hidden transition-colors duration-300 ${
           darkMode 
             ? 'bg-gray-800 border-gray-700' 
@@ -521,7 +669,7 @@ function App() {
         }`}>
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Zap className="w-6 h-6 text-white" />
@@ -531,18 +679,6 @@ function App() {
                   <p className="text-blue-100">Professional image optimization for any platform</p>
                 </div>
               </div>
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-                title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5 text-white" />
-                ) : (
-                  <Moon className="w-5 h-5 text-white" />
-                )}
-              </button>
             </div>
           </div>
 
@@ -616,7 +752,7 @@ function App() {
       }`}>
         <div className="max-w-4xl mx-auto space-y-16">
           {/* Why Use Easy Image Compress */}
-          <section className="max-w-2xl mx-auto text-center">
+          <section id="why-use" className="max-w-2xl mx-auto text-center scroll-mt-20">
             <h2 className={`text-3xl font-bold mb-6 ${
               darkMode ? 'text-gray-100' : 'text-slate-800'
             }`}>
@@ -642,7 +778,7 @@ function App() {
           </section>
 
           {/* How It Works */}
-          <section className="max-w-2xl mx-auto">
+          <section id="how-it-works" className="max-w-2xl mx-auto scroll-mt-20">
             <h2 className={`text-3xl font-bold mb-6 text-center ${
               darkMode ? 'text-gray-100' : 'text-slate-800'
             }`}>
@@ -727,7 +863,7 @@ function App() {
           </section>
 
           {/* Tips for Etsy and Shopee Sellers */}
-          <section className="max-w-2xl mx-auto">
+          <section id="tips" className="max-w-2xl mx-auto scroll-mt-20">
             <h2 className={`text-3xl font-bold mb-6 text-center ${
               darkMode ? 'text-gray-100' : 'text-slate-800'
             }`}>
@@ -835,7 +971,7 @@ function App() {
           </section>
 
           {/* About This Tool */}
-          <section id="about" className="scroll-mt-8">
+          <section id="about" className="scroll-mt-20">
             <div className={`rounded-2xl p-8 shadow-lg border ${
               darkMode 
                 ? 'bg-gray-800 border-gray-700' 
@@ -891,7 +1027,7 @@ function App() {
           </section>
 
           {/* Privacy Policy */}
-          <section id="privacy" className="scroll-mt-8">
+          <section id="privacy" className="scroll-mt-20">
             <div className={`rounded-2xl p-8 shadow-lg border ${
               darkMode 
                 ? 'bg-gray-800 border-gray-700' 
@@ -993,7 +1129,7 @@ function App() {
           </section>
 
           {/* Contact */}
-          <section id="contact" className="scroll-mt-8">
+          <section id="contact" className="scroll-mt-20">
             <div className={`rounded-2xl p-8 shadow-lg border ${
               darkMode 
                 ? 'bg-gray-800 border-gray-700' 

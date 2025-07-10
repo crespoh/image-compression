@@ -626,89 +626,125 @@ const App: React.FC = () => {
       {/* SEO-Friendly Content Sections */}
       <div className="max-w-6xl mx-auto px-4">
         {/* Why Use Easy Image Compress Section */}
-        <section id="why-use" className="max-w-2xl mx-auto px-4 py-12">
+        <section id="why-use" className="max-w-2xl mx-auto px-4 pt-24 pb-12">
           <h2 className={`text-2xl font-bold mb-4 ${
             darkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Why Use Easy Image Compress?
           </h2>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             E-commerce sellers on platforms like Etsy and Shopee face constant challenges with image file size limits and loading speeds. Large image files can slow down your product listings, hurt your search rankings, and frustrate potential customers.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             Our tool solves these problems by providing instant, client-side image compression that maintains visual quality while dramatically reducing file sizes. Unlike other tools that upload your images to servers, everything happens directly in your browser for maximum privacy and speed.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             With platform-specific presets, you can optimize images for Etsy's 500KB recommendation, Shopee's 2MB limit, or LinkedIn's exact banner dimensions without guesswork.
           </p>
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="max-w-2xl mx-auto px-4 py-12">
+        <section id="how-it-works" className="max-w-2xl mx-auto px-4 pt-24 pb-12">
           <h2 className={`text-2xl font-bold mb-4 ${
             darkMode ? 'text-white' : 'text-gray-900'
           }`}>
             How It Works
           </h2>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-6 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             Our image compression tool is designed for simplicity and efficiency. Follow these four steps to optimize your images:
           </p>
-          <ol className={`text-slate-600 dark:text-gray-300 leading-relaxed space-y-3`}>
+          <ol className={`leading-relaxed space-y-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-              <span><strong>Upload your image:</strong> Drag and drop your JPG or PNG file, or click to browse. Files up to 10MB and 8000×8000 pixels are supported.</span>
+              <div>
+                <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Upload your image:</strong>
+                <span className="ml-1">Drag and drop your JPG or PNG file, or click to browse. Files up to 10MB and 8000×8000 pixels are supported.</span>
+              </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
-              <span><strong>Choose a preset:</strong> Select from Etsy (500KB), Shopee (2MB), LinkedIn Banner (exact resize), or Custom dimensions to match your platform's requirements.</span>
+              <div>
+                <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Choose a preset:</strong>
+                <span className="ml-1">Select from Etsy (500KB), Shopee (2MB), LinkedIn Banner (exact resize), or Custom dimensions to match your platform's requirements.</span>
+              </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-              <span><strong>Adjust quality:</strong> Use the slider to fine-tune compression quality from 50% (smaller file) to 95% (better quality) based on your needs.</span>
+              <div>
+                <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Adjust quality:</strong>
+                <span className="ml-1">Use the slider to fine-tune compression quality from 50% (smaller file) to 95% (better quality) based on your needs.</span>
+              </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
-              <span><strong>Download result:</strong> Preview the before/after comparison and download your optimized image with significant file size reduction.</span>
+              <div>
+                <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Download result:</strong>
+                <span className="ml-1">Preview the before/after comparison and download your optimized image with significant file size reduction.</span>
+              </div>
             </li>
           </ol>
         </section>
 
         {/* Tips for Etsy and Shopee Sellers Section */}
-        <section id="tips" className="max-w-2xl mx-auto px-4 py-12">
+        <section id="tips" className="max-w-2xl mx-auto px-4 pt-24 pb-12">
           <h2 className={`text-2xl font-bold mb-4 ${
             darkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Tips for Etsy and Shopee Sellers
           </h2>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             Online marketplace sellers often struggle with image upload limits and slow-loading product pages. Here's how our compression tool addresses these common frustrations:
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
-            <strong>Etsy sellers</strong> know the frustration of hitting the platform's file size recommendations. Images over 500KB can slow down your shop and hurt mobile performance. Our Etsy preset automatically optimizes your product photos to stay under this limit while maintaining the visual quality that showcases your products effectively.
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
+            <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Etsy sellers</strong> know the frustration of hitting the platform's file size recommendations. Images over 500KB can slow down your shop and hurt mobile performance. Our Etsy preset automatically optimizes your product photos to stay under this limit while maintaining the visual quality that showcases your products effectively.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
-            <strong>Shopee sellers</strong> face similar challenges with the 2MB upload limit. Large product images can cause listing failures or poor mobile experience. The Shopee preset ensures your images meet platform requirements while loading quickly for potential buyers browsing on mobile devices.
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
+            <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Shopee sellers</strong> face similar challenges with the 2MB upload limit. Large product images can cause listing failures or poor mobile experience. The Shopee preset ensures your images meet platform requirements while loading quickly for potential buyers browsing on mobile devices.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
-            <strong>Professional tip:</strong> Faster-loading images improve your search ranking on both platforms. Compressed images also reduce bandwidth costs for your customers, leading to better user experience and potentially higher conversion rates.
+          <p className={`leading-relaxed ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
+            <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Professional tip:</strong> Faster-loading images improve your search ranking on both platforms. Compressed images also reduce bandwidth costs for your customers, leading to better user experience and potentially higher conversion rates.
           </p>
         </section>
 
         {/* About Section */}
-        <section id="about" className="max-w-2xl mx-auto px-4 py-12">
+        <section id="about" className="max-w-2xl mx-auto px-4 pt-24 pb-12">
           <h2 className={`text-2xl font-bold mb-4 ${
             darkMode ? 'text-white' : 'text-gray-900'
           }`}>
             About Easy Image Compress
           </h2>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             Easy Image Compress is a professional-grade image optimization tool designed specifically for e-commerce sellers, content creators, and digital marketers. Built with privacy and performance in mind, our tool processes all images directly in your browser without uploading files to external servers.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
+          <p className={`leading-relaxed mb-4 ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
             We understand the unique challenges faced by online sellers who need to balance image quality with file size constraints across different platforms. That's why we've created platform-specific presets that take the guesswork out of image optimization.
           </p>
-          <p className={`text-slate-600 dark:text-gray-300 leading-relaxed mb-4`}>
-            <strong>Privacy Policy:</strong> We respect your privacy. All image processing happens locally in your browser. No images, personal data, or usage information is transmitted to our servers or third parties. For questions or support, contact us at info@codedcheese.com.
+          <p className={`leading-relaxed ${
+            darkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}>
+            <strong className={darkMode ? 'text-white' : 'text-gray-900'}>Privacy Policy:</strong> We respect your privacy. All image processing happens locally in your browser. No images, personal data, or usage information is transmitted to our servers or third parties. For questions or support, contact us at info@codedcheese.com.
           </p>
         </section>
       </div>

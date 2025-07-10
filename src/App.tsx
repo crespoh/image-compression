@@ -757,7 +757,7 @@ const App: React.FC = () => {
           <p className={`text-sm ${
             darkMode ? 'text-gray-400' : 'text-slate-500'
           }`}>
-            © 2024 Easy Image Compress. Made with ❤️ by{' '}
+            © 2025 Easy Image Compress. Made with ❤️ by{' '}
             <a 
               href="https://www.codedcheese.com" 
               target="_blank" 

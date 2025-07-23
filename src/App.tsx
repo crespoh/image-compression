@@ -257,6 +257,9 @@ const App: React.FC = () => {
         size: blob.size
       });
       
+      // Plausible: track compression completion
+      window.plausible?.('Compression Completed');
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process image');
     } finally {
@@ -270,6 +273,9 @@ const App: React.FC = () => {
       setError(fileError);
       return;
     }
+    
+    // Plausible: track upload start
+    window.plausible?.('Upload Started');
     
     setError(null);
     setCompressedImage(null);
